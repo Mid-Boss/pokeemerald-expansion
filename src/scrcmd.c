@@ -2359,3 +2359,11 @@ bool8 ScrCmd_givecustommon(struct ScriptContext *ctx)
     return FALSE;
 }
 
+u16 ScrCmd_giverandommon(struct ScriptContext* ctx) // added
+{
+    u8 rarity = ScriptReadByte(ctx);
+
+    gSpecialVar_Result = ScriptGiveRandomMon(rarity);
+    return gSpecialVar_Result;
+}
+

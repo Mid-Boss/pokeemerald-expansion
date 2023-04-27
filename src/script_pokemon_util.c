@@ -359,3 +359,18 @@ u8 ScriptGiveCustomMon(u16 species, u8 level, u16 item, u8 ball, u8 nature, u8 a
     
     return sentToPc;
 }
+
+u16 ScriptGiveRandomMon(u8 rarity)
+{
+    int national_dex_num;
+    u16 targetSpecies;
+
+    FlagSet(FLAG_SYS_POKEDEX_GET);
+    FlagSet(FLAG_SYS_POKEMON_GET);
+    FlagSet(FLAG_SYS_NATIONAL_DEX);
+    national_dex_num = Random() % (NUM_SPECIES - 331); // extra pokemon in dex (megas)
+    targetSpecies = NationalPokedexNumToSpecies(national_dex_num);
+    ScriptGiveMon(targetSpecies, 50, ITEM_NONE, 0, 0, 0);
+
+    return targetSpecies;
+}

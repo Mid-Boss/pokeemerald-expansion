@@ -8501,12 +8501,12 @@ u32 GetMonFriendshipScore(struct Pokemon *pokemon)
     return FRIENDSHIP_NONE;
 }
 
-void UpdateMonPersonality(struct BoxPokemon *boxMon, u32 personality)
+void UpdateMonPersonality(struct BoxPokemon* boxMon, u32 personality)
 {
-    struct PokemonSubstruct0 *old0, *new0;
-    struct PokemonSubstruct1 *old1, *new1;
-    struct PokemonSubstruct2 *old2, *new2;
-    struct PokemonSubstruct3 *old3, *new3;
+    struct PokemonSubstruct0* old0, * new0;
+    struct PokemonSubstruct1* old1, * new1;
+    struct PokemonSubstruct2* old2, * new2;
+    struct PokemonSubstruct3* old3, * new3;
     struct BoxPokemon old;
 
     old = *boxMon;
@@ -8528,6 +8528,7 @@ void UpdateMonPersonality(struct BoxPokemon *boxMon, u32 personality)
     *new3 = *old3;
     boxMon->checksum = CalculateBoxMonChecksum(boxMon);
     EncryptBoxMon(boxMon);
+}
 void CreateShinyMonWithNature(struct Pokemon *mon, u16 species, u8 level, u8 nature)
 {
     u32 personality;

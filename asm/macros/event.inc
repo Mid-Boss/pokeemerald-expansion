@@ -1852,6 +1852,12 @@
     customgivemon \species, \level, 0, 0, NUM_NATURES, 0xFF, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, \move1, \move2, \move3, \move4, 0
     .endm
 
+	@ added
+	.macro giverandommon rarity:req 
+	.byte 0xe4
+    .byte \rarity
+	.endm
+
 @ Supplementary
 
 	.macro goto_if_unset flag:req, dest:req

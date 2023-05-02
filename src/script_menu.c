@@ -21,6 +21,9 @@
 #include "data/script_menu.h"
 
 static EWRAM_DATA u8 sProcessInputDelay = 0;
+static EWRAM_DATA u8 sDynamicMenuEventId = 0;
+static EWRAM_DATA struct DynamicMultichoiceStack* sDynamicMultiChoiceStack = NULL;
+static EWRAM_DATA u16* sDynamicMenuEventScratchPad = NULL;
 
 static u8 sLilycoveSSTidalSelections[SSTIDAL_SELECTION_COUNT];
 
@@ -39,10 +42,6 @@ struct DynamicListMenuEventCollection
     DynamicListCallback OnSelectionChanged;
     DynamicListCallback OnDestroy;
 };
-
-static EWRAM_DATA u8 sProcessInputDelay = 0;
-
-static u8 sLilycoveSSTidalSelections[SSTIDAL_SELECTION_COUNT];
 
 static void Task_HandleMultichoiceInput(u8 taskId);
 static void Task_HandleYesNoInput(u8 taskId);

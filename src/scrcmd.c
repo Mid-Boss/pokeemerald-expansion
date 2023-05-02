@@ -2368,26 +2368,6 @@ bool8 ScrCmd_getrandommon(struct ScriptContext* ctx) // added
     return FALSE;
 }
 
-bool8 ScrCmd_multichoice_dynamic(struct ScriptContext* ctx)
-{
-    u8 left = ScriptReadByte(ctx);
-    u8 top = ScriptReadByte(ctx);
-    u8 ignoreBPress = ScriptReadByte(ctx);
-    u8 defaultChoice = ScriptReadByte(ctx);
-    const u8** options = (const u8**)ScriptReadWord(ctx);
-    u8 count = 0;
-    while (options[count])
-        ++count;
-
-    if (ScriptMenu_MultichoiceDynamic(left, top, options, count,
-        ignoreBPress, defaultChoice) == TRUE)
-    {
-        ScriptContext_Stop();
-        return TRUE;
-    }
-    return FALSE;
-}
-
 bool8 ScrCmd_multichoice2(struct ScriptContext* ctx) 
 {
     u8 x = ScriptReadByte(ctx);

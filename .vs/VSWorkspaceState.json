@@ -2,9 +2,11 @@
   "ExpandedNodes": [
     "",
     "\\data",
+    "\\data\\maps",
+    "\\data\\maps\\Town",
     "\\src\\data",
     "\\src\\data\\pokemon"
   ],
-  "SelectedNode": "\\src\\data\\pokemon\\species_info.h",
+  "SelectedNode": "\\data\\maps\\Town\\scripts.inc",
   "PreviewInSolutionExplorer": false
 }

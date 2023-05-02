@@ -1,12 +1,11 @@
 {
   "ExpandedNodes": [
     "",
+    "\\asm",
+    "\\asm\\macros",
     "\\data",
-    "\\data\\maps",
-    "\\data\\maps\\Town",
-    "\\src\\data",
-    "\\src\\data\\pokemon"
+    "\\data\\maps\\Town"
   ],
-  "SelectedNode": "\\data\\maps\\Town\\scripts.inc",
+  "SelectedNode": "\\asm\\macros\\event.inc",
   "PreviewInSolutionExplorer": false
 }

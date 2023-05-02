@@ -27,6 +27,8 @@ static u8 sLilycoveSSTidalSelections[SSTIDAL_SELECTION_COUNT];
 static void Task_HandleMultichoiceInput(u8 taskId);
 static void Task_HandleYesNoInput(u8 taskId);
 static void Task_HandleMultichoiceGridInput(u8 taskId);
+static void DrawMultichoiceMenuImpl(u8 left, u8 top, u8 count, const struct MenuAction* actions,
+    u8 multichoiceId, bool8 ignoreBPress, u8 cursorPos);
 static void DrawMultichoiceMenu(u8 left, u8 top, u8 multichoiceId, bool8 ignoreBPress, u8 cursorPos);
 static void InitMultichoiceCheckWrap(bool8 ignoreBPress, u8 count, u8 windowId, u8 multichoiceId);
 static void DrawLinkServicesMultichoiceMenu(u8 multichoiceId);
@@ -48,6 +50,19 @@ bool8 ScriptMenu_Multichoice(u8 left, u8 top, u8 multichoiceId, bool8 ignoreBPre
         DrawMultichoiceMenu(left, top, multichoiceId, ignoreBPress, 0);
         return TRUE;
     }
+}
+
+bool8 ScriptMenu_MultichoiceDynamic(u8 left, u8 top, const u8** multichoiceTexts, u8 multichoiceCount, bool8 ignoreBPress, u8 defaultChoice)
+{
+    struct MenuAction actions[multichoiceCount];
+    int i;
+    if (FuncIsActiveTask(Task_HandleMultichoiceInput) == TRUE)
+        return FALSE;
+    gSpecialVar_Result = 0xFF;
+    for (i = 0; i < multichoiceCount; i++)
+        actions[i].text = multichoiceTexts[i];
+    DrawMultichoiceMenuImpl(left, top, multichoiceCount, actions, MULTI_UNUSED_9, ignoreBPress, defaultChoice);
+    return TRUE;
 }
 
 bool8 ScriptMenu_MultichoiceWithDefault(u8 left, u8 top, u8 multichoiceId, bool8 ignoreBPress, u8 defaultChoice)
@@ -114,7 +129,30 @@ static void DrawMultichoiceMenuInternal(u8 left, u8 top, u8 multichoiceId, bool8
 
 static void DrawMultichoiceMenu(u8 left, u8 top, u8 multichoiceId, bool8 ignoreBPress, u8 cursorPos)
 {
-    DrawMultichoiceMenuInternal(left, top, multichoiceId, ignoreBPress, cursorPos, sMultichoiceLists[multichoiceId].list, sMultichoiceLists[multichoiceId].count);
+    u8 count = sMultichoiceLists[multichoiceId].count;
+    const struct MenuAction* actions = sMultichoiceLists[multichoiceId].list;
+    DrawMultichoiceMenuImpl(left, top, count, actions, multichoiceId, ignoreBPress, cursorPos);
+}
+
+static void DrawMultichoiceMenuImpl(u8 left, u8 top, u8 count, const struct MenuAction* actions,
+    u8 multichoiceId, bool8 ignoreBPress, u8 cursorPos)
+{
+    int i;
+    u8 windowId;
+    int width = 0;
+    u8 newWidth;
+
+    for (i = 0; i < count; i++)
+        width = DisplayTextAndGetWidth(actions[i].text, width);
+
+    newWidth = ConvertPixelWidthToTileWidth(width);
+    left = ScriptMenu_AdjustLeftCoordFromWidth(left, newWidth);
+    windowId = CreateWindowFromRect(left, top, newWidth, count * 2);
+    SetStandardWindowBorderStyle(windowId, 0);
+    PrintMenuTable(windowId, count, actions);
+    InitMenuInUpperLeftCornerNormal(windowId, count, cursorPos);
+    ScheduleBgCopyTilemapToVram(0);
+    InitMultichoiceCheckWrap(ignoreBPress, count, windowId, multichoiceId);
 }
 
 #if I_REPEL_LURE_MENU == TRUE
@@ -839,4 +877,49 @@ int ScriptMenu_AdjustLeftCoordFromWidth(int left, int width)
     }
 
     return adjustedLeft;
+}
+
+void DrawMultichoiceMenuCustom(u8 left, u8 top, u8 multichoiceId, u8 ignoreBPress, u8 cursorPos, const struct MenuAction* actions, int count) 
+{
+    int i, windowId, width = 0;
+    u8 newWidth;
+    for (i = 0; i < count; i++) {
+        width = DisplayTextAndGetWidth(actions[i].text, width);
+    }
+    newWidth = ConvertPixelWidthToTileWidth(width);
+    left = ScriptMenu_AdjustLeftCoordFromWidth(left, newWidth);
+    windowId = CreateWindowFromRect(left, top, newWidth, count * 2);
+    SetStandardWindowBorderStyle(windowId, 0);
+    PrintMenuTable(windowId, count, actions);
+    InitMenuInUpperLeftCornerNormal(windowId, count, cursorPos);
+    ScheduleBgCopyTilemapToVram(0);
+    InitMultichoiceCheckWrap(ignoreBPress, count, windowId, multichoiceId);
+}
+
+bool8 ScriptMenu_MultichoiceGridCustom(u8 left, u8 top, u8 cursorPos, bool8 ignoreBPress, u8 columnCount, const struct MenuAction* actions, int count) 
+{
+    if (FuncIsActiveTask(Task_HandleMultichoiceGridInput) == TRUE) {
+        return FALSE;
+    }
+    else {
+        u8 taskId;
+        u8 rowCount, newWidth;
+        int i, width;
+        gSpecialVar_Result = 0xFF;
+        width = 0;
+        for (i = 0; i < count; i++) {
+            width = DisplayTextAndGetWidth(actions[i].text, width);
+        }
+        newWidth = ConvertPixelWidthToTileWidth(width);
+        left = ScriptMenu_AdjustLeftCoordFromWidth(left, columnCount * newWidth);
+        rowCount = count / columnCount;
+        taskId = CreateTask(Task_HandleMultichoiceGridInput, 80);
+        gTasks[taskId].data[4] = ignoreBPress;
+        gTasks[taskId].data[6] = CreateWindowFromRect(left, top, columnCount * newWidth, rowCount * 2);
+        SetStandardWindowBorderStyle(gTasks[taskId].data[6], 0);
+        PrintMenuGridTable(gTasks[taskId].data[6], newWidth * 8, columnCount, rowCount, actions);
+        InitMenuActionGrid(gTasks[taskId].data[6], newWidth * 8, columnCount, rowCount, cursorPos);
+        CopyWindowToVram(gTasks[taskId].data[6], COPYWIN_FULL);
+        return TRUE;
+    }
 }

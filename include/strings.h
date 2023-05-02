@@ -1307,6 +1307,9 @@ extern const u8 gText_TrainerHill1F[];
 extern const u8 gText_TrainerHill2F[];
 extern const u8 gText_TrainerHill3F[];
 extern const u8 gText_TrainerHill4F[];
+extern const u8 gText_PokemonChoice1[];
+extern const u8 gText_PokemonChoice2[];
+extern const u8 gText_Choice3[];
 
 // Cable Club multichoice text
 extern const u8 CableClub_Text_TradeUsingLinkCable[];

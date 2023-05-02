@@ -1830,3 +1830,6 @@ const u8 gText_Answer[] = _("ANSWER");
 const u8 gText_PokeBalls[] = _("POKé BALLS");
 const u8 gText_Berry[] = _("BERRY");
 const u8 gText_Berries[] = _("BERRIES");
+const u8 gText_PokemonChoice1[] = _("{STR_VAR_1}");
+const u8 gText_PokemonChoice2[] = _("{STR_VAR_2}");
+const u8 gText_Choice3[] = _("Choice 3");

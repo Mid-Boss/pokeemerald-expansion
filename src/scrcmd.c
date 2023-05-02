@@ -2359,11 +2359,72 @@ bool8 ScrCmd_givecustommon(struct ScriptContext *ctx)
     return FALSE;
 }
 
-u16 ScrCmd_giverandommon(struct ScriptContext* ctx) // added
+bool8 ScrCmd_getrandommon(struct ScriptContext* ctx) // added
 {
+    u8 gen = ScriptReadByte(ctx);
     u8 rarity = ScriptReadByte(ctx);
 
-    gSpecialVar_Result = ScriptGiveRandomMon(rarity);
-    return gSpecialVar_Result;
+    gSpecialVar_Result = ScriptGetRandomMon(gen, rarity);
+    return FALSE;
+}
+
+bool8 ScrCmd_multichoice_dynamic(struct ScriptContext* ctx)
+{
+    u8 left = ScriptReadByte(ctx);
+    u8 top = ScriptReadByte(ctx);
+    u8 ignoreBPress = ScriptReadByte(ctx);
+    u8 defaultChoice = ScriptReadByte(ctx);
+    const u8** options = (const u8**)ScriptReadWord(ctx);
+    u8 count = 0;
+    while (options[count])
+        ++count;
+
+    if (ScriptMenu_MultichoiceDynamic(left, top, options, count,
+        ignoreBPress, defaultChoice) == TRUE)
+    {
+        ScriptContext_Stop();
+        return TRUE;
+    }
+    return FALSE;
+}
+
+bool8 ScrCmd_multichoice2(struct ScriptContext* ctx) 
+{
+    u8 x = ScriptReadByte(ctx);
+    u8 y = ScriptReadByte(ctx);
+    const u8* choices = (const u8*)ScriptReadWord(ctx);
+    //char* choices = (char*)ScriptReadWord(ctx);
+    bool8 ignoreBPress = ScriptReadByte(ctx);
+    u8 columns = ScriptReadByte(ctx);
+    u8 defaultChoice = ScriptReadByte(ctx);
+    if ((u32)choices < 0x1000000) { //choices is a multichoiceId
+        if (columns > 1)
+            ScriptMenu_MultichoiceGrid(x, y, (u32)choices, ignoreBPress, columns);
+        else
+            ScriptMenu_MultichoiceWithDefault(x, y, (u32)choices, ignoreBPress, defaultChoice);
+        ScriptContext_Stop();
+        return TRUE;
+    }
+    else { //choices is a string
+        struct MenuAction menuItems[16] = { NULL };
+        u8 count = 0;
+        while (count < ARRAY_COUNT(menuItems)) {
+            int len = StringLength(choices);
+            if (!len) break;
+            menuItems[count++].text = choices;
+            choices += len + 1;
+        }
+        if (defaultChoice >= count)
+            defaultChoice = 0;
+        if (count > 0) {
+            if (columns > 1)
+                ScriptMenu_MultichoiceGridCustom(x, y, defaultChoice, ignoreBPress, columns, menuItems, count);
+            else
+                DrawMultichoiceMenuCustom(x, y, 0, ignoreBPress, defaultChoice, menuItems, count);
+            ScriptContext_Stop();
+            return TRUE;
+        }
+    }
+    return FALSE;
 }
 

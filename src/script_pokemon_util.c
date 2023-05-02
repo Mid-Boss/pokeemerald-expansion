@@ -1,6 +1,7 @@
 #include "global.h"
 #include "battle.h"
 #include "battle_gfx_sfx_util.h"
+#include "battle_util.h"
 #include "berry.h"
 #include "data.h"
 #include "daycare.h"
@@ -27,6 +28,8 @@
 
 static void CB2_ReturnFromChooseHalfParty(void);
 static void CB2_ReturnFromChooseBattleFrontierParty(void);
+
+extern struct Evolution gEvolutionTable[][EVOS_PER_MON];
 
 void HealPlayerParty(void)
 {
@@ -360,17 +363,298 @@ u8 ScriptGiveCustomMon(u16 species, u8 level, u16 item, u8 ball, u8 nature, u8 a
     return sentToPc;
 }
 
-u16 ScriptGiveRandomMon(u8 rarity)
+u8 ScriptCheckMonStats(u16 dexNum, u8 rarity)
 {
-    int national_dex_num;
+    u8 i;
+    u8 maxEvolutionLine = 4;
     u16 targetSpecies;
+    u16 evoSpecies;
+    u16 statTotal;
+    u16 bronzeThres = 450;
+    u16 silverThres = 525;
+    u16 goldThres = 1000;
+    u16 threshold;
 
-    FlagSet(FLAG_SYS_POKEDEX_GET);
-    FlagSet(FLAG_SYS_POKEMON_GET);
-    FlagSet(FLAG_SYS_NATIONAL_DEX);
-    national_dex_num = Random() % (NUM_SPECIES - 331); // extra pokemon in dex (megas)
-    targetSpecies = NationalPokedexNumToSpecies(national_dex_num);
-    ScriptGiveMon(targetSpecies, 50, ITEM_NONE, 0, 0, 0);
+    targetSpecies = NationalPokedexNumToSpecies(dexNum);
+
+    statTotal = gSpeciesInfo[targetSpecies].baseHP +
+                gSpeciesInfo[targetSpecies].baseAttack +
+                gSpeciesInfo[targetSpecies].baseSpeed +
+                gSpeciesInfo[targetSpecies].baseSpAttack +
+                gSpeciesInfo[targetSpecies].baseDefense +
+                gSpeciesInfo[targetSpecies].baseSpDefense;
+
+    switch (rarity)
+    {
+    case (0):
+        threshold = bronzeThres;
+        break;
+    case (1):
+        threshold = silverThres;
+        break;
+    case (2):
+        threshold = goldThres;
+        break;
+    }
+
+    if (statTotal > threshold)
+        return TRUE;
+
+    if (gEvolutionTable[targetSpecies - 1][0].targetSpecies == targetSpecies)
+        return TRUE;
+
+    for (i = 0; i < maxEvolutionLine; i++)
+    {
+        if (gEvolutionTable[targetSpecies][0].targetSpecies == SPECIES_NONE 
+            || gEvolutionTable[targetSpecies][0].method == EVO_MEGA_EVOLUTION
+            || gEvolutionTable[targetSpecies][0].method == EVO_MOVE_MEGA_EVOLUTION
+            || gEvolutionTable[targetSpecies][0].method == EVO_PRIMAL_REVERSION)
+        {
+            statTotal = gSpeciesInfo[targetSpecies].baseHP +
+                gSpeciesInfo[targetSpecies].baseAttack +
+                gSpeciesInfo[targetSpecies].baseSpeed +
+                gSpeciesInfo[targetSpecies].baseSpAttack +
+                gSpeciesInfo[targetSpecies].baseDefense +
+                gSpeciesInfo[targetSpecies].baseSpDefense;
+
+            if (statTotal > threshold)
+                return TRUE;
+            else
+                break;
+        }
+        else
+        {
+            targetSpecies = gEvolutionTable[targetSpecies][0].targetSpecies;
+        }
+
+        /*if (gEvolutionTable[targetSpecies][0].targetSpecies == SPECIES_NONE
+            || gEvolutionTable[targetSpecies][0].method == EVO_MEGA_EVOLUTION
+            || gEvolutionTable[targetSpecies][0].method == EVO_MOVE_MEGA_EVOLUTION
+            || gEvolutionTable[targetSpecies][0].method == EVO_PRIMAL_REVERSION)
+        {
+            statTotal = gSpeciesInfo[gEvolutionTable[targetSpecies][0].targetSpecies].baseHP +
+                gSpeciesInfo[gEvolutionTable[targetSpecies][0].targetSpecies].baseAttack +
+                gSpeciesInfo[gEvolutionTable[targetSpecies][0].targetSpecies].baseSpeed +
+                gSpeciesInfo[gEvolutionTable[targetSpecies][0].targetSpecies].baseSpAttack +
+                gSpeciesInfo[gEvolutionTable[targetSpecies][0].targetSpecies].baseDefense +
+                gSpeciesInfo[gEvolutionTable[targetSpecies][0].targetSpecies].baseSpDefense;
+
+            if (statTotal > threshold)
+                return TRUE;
+            break;
+        }*/
+    }
+    
+    return FALSE;
+}
+
+u16 ScriptGetRandomMon(u8 gen, u8 rarity) // 0 = All Gens, 1-8 = Gens 1-8
+{
+    u16 national_dex_num;
+    int gen1Dex = 151;
+    int gen1DexLegArr[5] = { 144, 145, 146, 150, 151 };
+    int gen2Dex = 251;
+    int gen2DexLegArr[6] = { 243, 244, 245, 249, 250, 251 };
+    int gen3Dex = 386;
+    int gen3DexLegArr[10] = { 377, 378, 379, 380, 381, 382, 383, 384, 385, 386 };
+    int gen4Dex = 493;
+    int gen4DexLegArr[14] = { 480, 481, 482, 483, 484, 485, 486, 487, 488, 489, 490, 491, 492, 493 };
+    int gen5Dex = 649;
+    int gen5DexLegArr[12] = { 638, 639, 640, 641, 642, 643, 644, 645, 646, 647, 648, 649 };
+    int gen6Dex = 721;
+    int gen6DexLegArr[6] = { 716, 717, 718, 719, 720, 721 };
+    int gen7Dex = 809;
+    int gen7DexLegArr[25] = { 785, 786, 787, 788, 789, 790, 791, 792, 793, 794, 795, 796, 797, 798, 799, 800, 801, 802, 803, 804, 805, 806, 807, 808, 809 };
+    int gen8Dex = 905;
+    int gen8DexLegArr[12] = { 888, 889, 890, 891, 892, 893, 894, 895, 896, 897, 898, 905 };
+    int allLeg[90] = { 144, 145, 146, 150, 151, 243, 244, 245, 249, 250, 251, 377, 378, 379, 380, 381, 382, 383, 384,
+        385, 386, 480, 481, 482, 483, 484, 485, 486, 487, 488, 489, 490, 491, 492, 493, 638, 639, 640, 641, 642,
+        643, 644, 645, 646, 647, 648, 649, 716, 717, 718, 719, 720, 721, 785, 786, 787, 788, 789, 790, 791, 792,
+        793, 794, 795, 796, 797, 798, 799, 800, 801, 802, 803, 804, 805, 806, 807, 808, 809, 888, 889, 890, 891,
+        892, 893, 894, 895, 896, 897, 898, 905 };
+    u16 targetSpecies;
+    u8 isLeg;
+    u8 rarityCheck;
+    u8 sanityCheck;
+    u16 i;
+    
+    if (!FlagGet(FLAG_SYS_POKEDEX_GET))
+        FlagSet(FLAG_SYS_POKEDEX_GET);
+    if (!FlagGet(FLAG_SYS_POKEMON_GET))
+        FlagSet(FLAG_SYS_POKEMON_GET);
+    if (!FlagGet(FLAG_SYS_NATIONAL_DEX))
+        FlagSet(FLAG_SYS_NATIONAL_DEX);
+
+    isLeg = TRUE;
+    rarityCheck = TRUE;
+    sanityCheck = TRUE;
+    switch (gen)
+    {
+    case (0):
+        while (isLeg || rarityCheck)
+        {
+            national_dex_num = Random() % gen8Dex;
+            for (i = 0; i < 90; i++)
+            {
+                if (national_dex_num == allLeg[i])
+                {
+                    isLeg = TRUE;
+                    break;
+                }
+                else
+                    isLeg = FALSE;
+            }
+            rarityCheck = ScriptCheckMonStats(national_dex_num, rarity);
+        }
+        break;
+    case (1):
+        while (isLeg || rarityCheck || sanityCheck)
+        {
+            isLeg = TRUE;
+            rarityCheck = TRUE;
+            sanityCheck = TRUE;
+
+            national_dex_num = Random() % gen1Dex;
+            if (national_dex_num <= gen1Dex)
+                sanityCheck = FALSE;
+            for (i = 0; i < 90; i++)
+            {
+                if (national_dex_num == gen1DexLegArr[i])
+                {
+                    isLeg = TRUE;
+                    break;
+                }
+                else
+                    isLeg = FALSE;
+            }
+            rarityCheck = ScriptCheckMonStats(national_dex_num, rarity);
+        }
+        break;
+    case (2):
+        while (isLeg)
+        {
+            national_dex_num = (Random() % (gen2Dex - gen1Dex)) + gen1Dex;
+            for (i = 0; i < 90; i++)
+            {
+                if (national_dex_num == gen2DexLegArr[i])
+                    break;
+            }
+            if (i >= 90)
+                isLeg = FALSE;
+        }
+        break;
+    case (3):
+        while (isLeg)
+        {
+            national_dex_num = (Random() % (gen3Dex - gen2Dex)) + gen2Dex;
+            for (i = 0; i < 90; i++)
+            {
+                if (national_dex_num == gen3DexLegArr[i])
+                    break;
+            }
+            if (i >= 90)
+                isLeg = FALSE;
+        }
+        break;
+    case (4):
+        while (isLeg)
+        {
+            national_dex_num = (Random() % (gen4Dex - gen3Dex)) + gen3Dex;
+            for (i = 0; i < 90; i++)
+            {
+                if (national_dex_num == gen4DexLegArr[i])
+                    break;
+            }
+            if (i >= 90)
+                isLeg = FALSE;
+        }
+        break;
+    case (5):
+        while (isLeg)
+        {
+            national_dex_num = (Random() % (gen5Dex - gen4Dex)) + gen4Dex;
+            for (i = 0; i < 90; i++)
+            {
+                if (national_dex_num == gen5DexLegArr[i])
+                    break;
+            }
+            if (i >= 90)
+                isLeg = FALSE;
+        }
+        break;
+    case (6):
+        while (isLeg)
+        {
+            national_dex_num = (Random() % (gen6Dex - gen5Dex)) + gen5Dex;
+            for (i = 0; i < 90; i++)
+            {
+                if (national_dex_num == gen6DexLegArr[i])
+                    break;
+            }
+            if (i >= 90)
+                isLeg = FALSE;
+        }
+        break;
+    case (7):
+        while (isLeg)
+        {
+            national_dex_num = (Random() % (gen7Dex - gen6Dex)) + gen6Dex;
+            for (i = 0; i < 90; i++)
+            {
+                if (national_dex_num == gen7DexLegArr[i])
+                    break;
+            }
+            if (i >= 90)
+                isLeg = FALSE;
+        }
+        break;
+    case (8):
+        while (isLeg)
+        {
+            national_dex_num = (Random() % (gen8Dex - gen7Dex)) + gen7Dex;
+            for (i = 0; i < 90; i++)
+            {
+                if (national_dex_num == gen8DexLegArr[i])
+                    break;
+            }
+            if (i >= 90)
+                isLeg = FALSE;
+        }
+        break;
+    default:
+        while (isLeg)
+        {
+            national_dex_num = Random() % gen8Dex;
+            for (i = 0; i < 90; i++)
+            {
+                if (national_dex_num == allLeg[i])
+                    break;
+            }
+            if (i >= 90)
+                isLeg = FALSE;
+        }
+        break;
+    }
+    
+        targetSpecies = NationalPokedexNumToSpecies(national_dex_num);
 
     return targetSpecies;
 }
+
+/*u16 ScriptGiveRandomMon(u8 gen, u8 rarity)
+{
+    u16 targetSpecies;
+
+    if (!FlagGet(FLAG_SYS_POKEDEX_GET))
+        FlagSet(FLAG_SYS_POKEDEX_GET);
+    if (!FlagGet(FLAG_SYS_POKEMON_GET))
+        FlagSet(FLAG_SYS_POKEMON_GET);
+    if (!FlagGet(FLAG_SYS_NATIONAL_DEX))
+        FlagSet(FLAG_SYS_NATIONAL_DEX);
+
+    targetSpecies = ScriptGetRandomMon(gen, rarity);
+    
+    //ScriptGiveMon(targetSpecies, 50, ITEM_NONE, 0, 0, 0);
+
+    return targetSpecies;
+}*/

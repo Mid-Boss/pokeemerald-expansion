@@ -125,7 +125,6 @@ static u16 GetLengthWithExpandedPlayerName(const u8 *str)
     return length;
 }
 
-//static void DrawMultichoiceMenuInternal(u8 left, u8 top, u8 multichoiceId, bool8 ignoreBPress, u8 cursorPos, const struct MenuAction *actions, int count)
 void MultichoiceDynamic_InitStack(u32 capacity)
 {
     AGB_ASSERT(sDynamicMultiChoiceStack == NULL);

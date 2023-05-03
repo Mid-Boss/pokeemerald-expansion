@@ -515,7 +515,7 @@ u16 ScriptGetRandomMon(u8 gen, u8 rarity) // 0 = All Gens, 1-8 = Gens 1-8
             sanityCheck = TRUE;
 
             national_dex_num = Random() % gen1Dex;
-            if (national_dex_num <= gen1Dex)
+            if (national_dex_num <= gen1Dex && national_dex_num != 0)
                 sanityCheck = FALSE;
             for (i = 0; i < 90; i++)
             {

@@ -3,9 +3,8 @@
     "",
     "\\asm",
     "\\asm\\macros",
-    "\\data",
-    "\\data\\maps\\Town"
+    "\\data"
   ],
-  "SelectedNode": "\\asm\\macros\\event.inc",
+  "SelectedNode": "\\src",
   "PreviewInSolutionExplorer": false
 }
